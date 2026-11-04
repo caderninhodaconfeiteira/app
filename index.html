@@ -1,3 +1,11 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF4EC">
+<meta name="format-detection" content="telephone=no">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Caderninho da Confeiteira</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -193,7 +201,21 @@ input[type=range]{padding:0;border:0;min-height:36px;accent-color:var(--accent);
   @keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
 }
 @media (max-width:360px){.grid2{grid-template-columns:1fr}.f2{grid-template-columns:1fr}}
+@media (max-width:400px){
+  .top{gap:8px}
+  .brand{gap:8px;min-width:0}
+  .brand svg{width:32px;height:32px}
+  .brand h1{font-size:1.15rem!important}
+  .brand small{font-size:.68rem}
+  .month button{width:30px;height:32px}
+  .month span{min-width:0;font-size:.84rem;white-space:nowrap}
+}
+.month span{white-space:nowrap}
+
 </style>
+</head>
+<body>
+
 
 <div class="wrap" id="app">
   <header class="top">
@@ -331,7 +353,7 @@ function msgs(o){
 function setTab(t){ui.tab=t;try{sessionStorage.setItem(KEY+"-tab",t)}catch(e){}render();window.scrollTo(0,0)}
 function render(){
   document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===ui.tab?"page":"false"));
-  $("#mLabel").textContent=monthName(ui.y,ui.m);
+  $("#mLabel").textContent=innerWidth<=400?(shortMonth(ui.y,ui.m)+" "+ui.y):monthName(ui.y,ui.m);
   $("#monthBox").hidden=(ui.tab==="preco"||ui.tab==="pedidos");
   const v=$("#view");
   v.innerHTML=({inicio:vInicio,pedidos:vPedidos,preco:vPreco,caixa:vCaixa})[ui.tab]();
@@ -694,3 +716,6 @@ render();
 if(!S.boasVindas)boasVindas();
 })();
 </script>
+
+</body>
+</html>

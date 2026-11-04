@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF4EC">
+<meta name="format-detection" content="telephone=no">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>20 Receitas Prontas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: página única de uma coluna — cabeçalho, botão principal fixo no topo da lista, cartões de receita. */
+:root{
+  --bg:#FBF4EC;--surface:#FFFFFF;--surface-2:#F4E7DA;--ink:#3B2219;--ink-2:#7A5A4C;--line:#E7D6C6;
+  --accent:#B5523B;--accent-ink:#FFFFFF;--frost:#F6C9D3;--frost-ink:#6E2436;--ok:#2F7A4B;--ok-bg:#DDF0E3;
+  --f-display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;--f-body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#1C1411;--surface:#271C18;--surface-2:#33251F;--ink:#F6E9DF;--ink-2:#C9AE9F;--line:#3E2D26;--accent:#E9876F;--accent-ink:#2A120C;--frost:#5A2F3A;--frost-ink:#FFD9E1;--ok:#7FD39E;--ok-bg:#1E3527;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1C1411;--surface:#271C18;--surface-2:#33251F;--ink:#F6E9DF;--ink-2:#C9AE9F;--line:#3E2D26;--accent:#E9876F;--accent-ink:#2A120C;--frost:#5A2F3A;--frost-ink:#FFD9E1;--ok:#7FD39E;--ok-bg:#1E3527;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--f-body)}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px;display:flex;flex-direction:column;gap:14px}
+h1,h2{font-family:var(--f-display);margin:0;line-height:1.1;text-wrap:balance}
+h1{font-size:2rem;font-weight:800}
+h2{font-size:1.1rem;font-weight:700}
+.eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.lead{color:var(--ink-2);margin:0}
+.btn{border:0;border-radius:14px;padding:16px;font:inherit;font-weight:700;font-size:1.05rem;min-height:54px;width:100%;cursor:pointer;background:var(--accent);color:var(--accent-ink);text-decoration:none;display:flex;align-items:center;justify-content:center}
+.btn.soft{background:var(--surface-2);color:var(--ink)}
+.btn:disabled{opacity:.6}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.done{background:var(--ok-bg);color:var(--ok);border-radius:14px;padding:14px;font-weight:600;display:flex;flex-direction:column;gap:10px}
+.note{background:var(--surface-2);border-radius:14px;padding:12px 14px;font-size:.88rem;color:var(--ink-2)}
+.list{display:flex;flex-direction:column;gap:8px}
+.rec{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.rec>div{min-width:0}
+.rec small{color:var(--ink-2);display:block}
+.rec .p{font-family:var(--f-display);font-weight:700;white-space:nowrap;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.rec .p span{display:block;font-family:var(--f-body);font-size:.72rem;font-weight:600;color:var(--ink-2);text-align:right}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <div class="eyebrow">Caderninho da Confeiteira</div>
+  <h1>20 Receitas Prontas</h1>
+  <p class="lead">Ingredientes e quantidades já preenchidos. Toque no botão e todas entram na sua calculadora de preço. Depois é só trocar os preços pelos do seu mercado.</p>
+  <div id="action"><button class="btn" id="add">Adicionar as 20 receitas ao meu Caderninho</button></div>
+  <p class="note">Abra esta página no <b>mesmo celular e no mesmo navegador</b> (Chrome ou Safari) em que você usa o Caderninho. Os preços são uma referência média: confira e ajuste na aba <b>Preço</b> do app.</p>
+  <h2>O que vem no pacote</h2>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const KEY="confeitaria-organizada-v1";
+const brl=n=>(Number(n)||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const uid=()=>Math.random().toString(36).slice(2,10);
+const pad=n=>String(n).padStart(2,"0");
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
+
+/* preço de referência: [preço do pacote, tamanho do pacote, unidade] */
+const P={
+  "Leite condensado":[7.5,395,"g"],"Creme de leite":[3.9,200,"g"],"Manteiga":[11.9,200,"g"],
+  "Chocolate em pó 50%":[12.9,200,"g"],"Chocolate meio amargo":[55,1000,"g"],"Granulado de chocolate":[8,150,"g"],
+  "Coco ralado":[5.5,100,"g"],"Açúcar":[5.2,1000,"g"],"Farinha de trigo":[6.5,1000,"g"],"Ovos":[22,30,"un"],
+  "Leite":[5.5,1000,"ml"],"Óleo":[8.5,900,"ml"],"Fermento em pó":[4.5,100,"g"],"Cenoura":[6,1000,"g"],
+  "Leite em pó":[22,400,"g"],"Gelatina sabor morango":[2.5,25,"g"],"Amendoim torrado":[12,500,"g"],
+  "Milho verde (lata)":[4.5,200,"g"],"Fubá":[5,1000,"g"],"Biscoito maisena":[5.5,200,"g"],
+  "Suco de maracujá concentrado":[9,500,"ml"],"Limão":[6,10,"un"],"Amido de milho":[7,500,"g"],
+  "Morango":[8,250,"g"],"Mel":[18,500,"g"]
+};
+const R=(nome,rend,horas,emb,extras,margem,ings)=>({nome,rend,horas,valorHora:15,emb,extras,margem,
+  ings:ings.map(([n,usa])=>({nome:n,preco:P[n][0],pac:P[n][1],un:P[n][2],usa}))});
+const RECEITAS=[
+  R("Brigadeiro tradicional (25 un)",25,1.5,4,2,40,[["Leite condensado",395],["Manteiga",15],["Chocolate em pó 50%",40],["Granulado de chocolate",100]]),
+  R("Brigadeiro gourmet meio amargo (30 un)",30,2,8,3,50,[["Leite condensado",395],["Creme de leite",200],["Chocolate meio amargo",150],["Manteiga",15],["Granulado de chocolate",120]]),
+  R("Beijinho (25 un)",25,1.5,4,2,40,[["Leite condensado",395],["Manteiga",15],["Coco ralado",100]]),
+  R("Bicho de pé (25 un)",25,1.5,4,2,40,[["Leite condensado",395],["Manteiga",15],["Gelatina sabor morango",25],["Açúcar",50]]),
+  R("Cajuzinho (25 un)",25,1.5,4,2,40,[["Leite condensado",395],["Amendoim torrado",250],["Chocolate em pó 50%",20],["Manteiga",15],["Açúcar",50]]),
+  R("Palha italiana (20 quadrados)",20,1.5,6,3,40,[["Leite condensado",790],["Manteiga",30],["Chocolate em pó 50%",80],["Biscoito maisena",200]]),
+  R("Brownie (12 pedaços)",12,1.5,8,5,40,[["Chocolate meio amargo",200],["Manteiga",150],["Açúcar",250],["Ovos",4],["Farinha de trigo",120],["Chocolate em pó 50%",30]]),
+  R("Pão de mel (20 un)",20,2,10,5,40,[["Farinha de trigo",300],["Mel",150],["Leite",240],["Chocolate em pó 50%",40],["Fermento em pó",10],["Chocolate meio amargo",400]]),
+  R("Cupcake de chocolate (12 un)",12,2,18,5,40,[["Farinha de trigo",180],["Açúcar",180],["Chocolate em pó 50%",90],["Ovos",2],["Leite",180],["Óleo",90],["Fermento em pó",10],["Leite condensado",395],["Creme de leite",200],["Manteiga",15]]),
+  R("Bolo de chocolate (20 fatias)",20,3,12,8,30,[["Farinha de trigo",360],["Açúcar",300],["Chocolate em pó 50%",150],["Ovos",4],["Leite",240],["Manteiga",100],["Fermento em pó",15],["Leite condensado",790],["Creme de leite",200]]),
+  R("Bolo de cenoura com cobertura (16 fatias)",16,2,10,6,30,[["Cenoura",300],["Ovos",4],["Óleo",240],["Açúcar",500],["Farinha de trigo",300],["Fermento em pó",15],["Chocolate em pó 50%",60],["Manteiga",30],["Leite",100]]),
+  R("Bolo de milho (12 fatias)",12,1.5,8,6,30,[["Milho verde (lata)",400],["Ovos",3],["Óleo",120],["Leite",200],["Açúcar",300],["Fubá",150],["Fermento em pó",15]]),
+  R("Bolo formigueiro (16 fatias)",16,1.5,8,6,30,[["Farinha de trigo",300],["Açúcar",300],["Ovos",4],["Leite",240],["Manteiga",100],["Granulado de chocolate",100],["Fermento em pó",15]]),
+  R("Bolo de pote Ninho com morango (14 potes)",14,2.5,20,6,40,[["Farinha de trigo",200],["Açúcar",200],["Ovos",4],["Leite",120],["Óleo",60],["Fermento em pó",10],["Leite condensado",790],["Creme de leite",400],["Leite em pó",120],["Morango",500]]),
+  R("Bolo de pote prestígio (14 potes)",14,2.5,20,6,40,[["Farinha de trigo",200],["Açúcar",200],["Chocolate em pó 50%",60],["Ovos",4],["Leite",120],["Óleo",60],["Fermento em pó",10],["Leite condensado",395],["Creme de leite",400],["Coco ralado",100],["Chocolate meio amargo",200]]),
+  R("Bolo de pote de brigadeiro (14 potes)",14,2.5,20,6,40,[["Farinha de trigo",200],["Açúcar",200],["Chocolate em pó 50%",120],["Ovos",4],["Leite",120],["Óleo",60],["Fermento em pó",10],["Leite condensado",790],["Creme de leite",400],["Manteiga",30],["Granulado de chocolate",100]]),
+  R("Pudim de leite (12 fatias)",12,1.5,6,8,35,[["Leite condensado",395],["Leite",400],["Ovos",3],["Açúcar",200]]),
+  R("Mousse de maracujá (8 potes)",8,0.5,8,2,40,[["Leite condensado",395],["Creme de leite",200],["Suco de maracujá concentrado",200]]),
+  R("Torta de limão (12 fatias)",12,2,10,6,35,[["Biscoito maisena",200],["Manteiga",100],["Leite condensado",790],["Limão",6],["Creme de leite",200],["Ovos",3],["Açúcar",150]]),
+  R("Pavê de chocolate (12 porções)",12,1.5,10,4,35,[["Biscoito maisena",400],["Leite",300],["Leite condensado",790],["Creme de leite",400],["Chocolate em pó 50%",60],["Ovos",2],["Amido de milho",30]])
+];
+function calc(c){
+  const ing=c.ings.reduce((a,i)=>a+i.usa/i.pac*i.preco,0);
+  const custo=ing+c.emb+c.extras+c.horas*c.valorHora;
+  const preco=custo/(1-c.margem/100);
+  return {preco,porUn:preco/c.rend};
+}
+document.getElementById("list").innerHTML=RECEITAS.map(r=>{const k=calc(r);return `<div class="rec"><div><b>${r.nome}</b><small>${r.ings.length} ingredientes · ${String(r.horas).replace(".",",")} h de trabalho</small></div><div class="p">${brl(k.preco)}<span>${brl(k.porUn)} cada</span></div></div>`}).join("");
+
+function load(){try{const t=localStorage.getItem(KEY);return t?JSON.parse(t):null}catch(e){return undefined}}
+const btn=document.getElementById("add");
+btn.addEventListener("click",()=>{
+  let S=load();
+  if(S===undefined){document.getElementById("action").innerHTML=`<div class="note">Este navegador está bloqueando o salvamento. Abra esta página no Chrome ou no Safari, fora do modo anônimo.</div>`;return}
+  if(!S)S={pedidos:[],caixa:[],receitas:[],pix:"",nome:"",inicio:today()};
+  S.receitas=S.receitas||[];
+  const tem=new Set(S.receitas.map(r=>r.nome));
+  let n=0;
+  RECEITAS.forEach(r=>{if(!tem.has(r.nome)){S.receitas.push(Object.assign({id:uid()},JSON.parse(JSON.stringify(r))));n++}});
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){document.getElementById("action").innerHTML=`<div class="note">Não consegui salvar neste navegador. Tente pelo Chrome ou pelo Safari.</div>`;return}
+  document.getElementById("action").innerHTML=`<div class="done" role="status">${n?`Pronto! ${n} receitas foram adicionadas ao seu Caderninho.`:"Essas receitas já estavam no seu Caderninho."}<a class="btn" href="./">Abrir meu Caderninho</a></div>`;
+});
+})();
+</script>
+
+</body>
+</html>
